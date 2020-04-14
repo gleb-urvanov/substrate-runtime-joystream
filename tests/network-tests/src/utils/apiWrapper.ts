@@ -7,6 +7,7 @@ import { Seat, VoteKind } from '@joystream/types';
 import { Balance, EventRecord } from '@polkadot/types/interfaces';
 import BN = require('bn.js');
 import { SubmittableExtrinsic } from '@polkadot/api/types';
+import { stringToU8a } from '@polkadot/util';
 import { Sender } from './sender';
 import { Utils } from './utils';
 
@@ -103,6 +104,10 @@ export class ApiWrapper {
     return this.estimateTxFee(
       this.api.tx.proposalsCodex.createRuntimeUpgradeProposal(stake, name, description, stake, runtime)
     );
+  }
+
+  public estimateProposeTextFee(stake: BN, name: string, description: string, runtime: string): BN {
+    return this.estimateTxFee(this.api.tx.proposalsCodex.createTextProposal(stake, name, description, stake, runtime));
   }
 
   public estimateVoteForProposalFee(): BN {
@@ -214,6 +219,22 @@ export class ApiWrapper {
     );
   }
 
+  public async proposeText(
+    account: KeyringPair,
+    stake: BN,
+    name: string,
+    description: string,
+    text: string
+  ): Promise<void> {
+    const memberId: BN = (await this.getMemberIds(account.address))[0].toBn();
+    console.log('memberid ' + memberId);
+    return this.sender.signAndSend(
+      this.api.tx.proposalsCodex.createTextProposal(memberId, name, description, stake, text),
+      account,
+      false
+    );
+  }
+
   public approveProposal(account: KeyringPair, memberId: BN, proposal: BN): Promise<void> {
     return this.sender.signAndSend(
       this.api.tx.proposalsEngine.vote(memberId, proposal, new VoteKind('Approve')),
@@ -252,6 +273,18 @@ export class ApiWrapper {
       await this.api.query.system.events<Vec<EventRecord>>(events => {
         events.forEach(record => {
           if (record.event.method.toString() === 'RuntimeUpdated') {
+            resolve();
+          }
+        });
+      });
+    });
+  }
+
+  public expectProposalStatusUpdated(): Promise<void> {
+    return new Promise(async resolve => {
+      await this.api.query.system.events<Vec<EventRecord>>(events => {
+        events.forEach(record => {
+          if (record.event.method.toString() === 'ProposalStatusUpdated') {
             resolve();
           }
         });
