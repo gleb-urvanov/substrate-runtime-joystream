@@ -2,7 +2,7 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Option, Vec, Bytes } from '@polkadot/types';
 import { Codec } from '@polkadot/types/types';
 import { KeyringPair } from '@polkadot/keyring/types';
-import { UserInfo, PaidMembershipTerms } from '@joystream/types/lib/members';
+import { UserInfo, PaidMembershipTerms, MemberId } from '@joystream/types/lib/members';
 import { Seat, VoteKind } from '@joystream/types';
 import { Balance, EventRecord } from '@polkadot/types/interfaces';
 import BN = require('bn.js');
@@ -41,8 +41,8 @@ export class ApiWrapper {
     );
   }
 
-  public getMembership(address: string): Promise<any> {
-    return this.api.query.members.memberIdsByControllerAccountId(address);
+  public getMemberIds(address: string): Promise<MemberId[]> {
+    return this.api.query.members.memberIdsByControllerAccountId<Vec<MemberId>>(address);
   }
 
   public getBalance(address: string): Promise<Balance> {
@@ -100,11 +100,13 @@ export class ApiWrapper {
   }
 
   public estimateProposeRuntimeUpgradeFee(stake: BN, name: string, description: string, runtime: Bytes): BN {
-    return this.estimateTxFee(this.api.tx.proposals.createProposal(stake, name, description, runtime));
+    return this.estimateTxFee(
+      this.api.tx.proposalsCodex.createRuntimeUpgradeProposal(stake, name, description, stake, runtime)
+    );
   }
 
   public estimateVoteForProposalFee(): BN {
-    return this.estimateTxFee(this.api.tx.proposals.voteOnProposal(0, 'Approve'));
+    return this.estimateTxFee(this.api.tx.proposalsEngine.vote(0, 0, 'Approve'));
   }
 
   private applyForCouncilElection(account: KeyringPair, amount: BN): Promise<void> {
@@ -197,23 +199,24 @@ export class ApiWrapper {
     return this.api.query.substrate.code<Bytes>();
   }
 
-  public proposeRuntime(
+  public async proposeRuntime(
     account: KeyringPair,
     stake: BN,
     name: string,
     description: string,
     runtime: Bytes
   ): Promise<void> {
+    const memberId: BN = (await this.getMemberIds(account.address))[0].toBn();
     return this.sender.signAndSend(
-      this.api.tx.proposals.createProposal(stake, name, description, runtime),
+      this.api.tx.proposalsCodex.createRuntimeUpgradeProposal(memberId, name, description, stake, runtime),
       account,
       false
     );
   }
 
-  public approveProposal(account: KeyringPair, proposal: BN): Promise<void> {
+  public approveProposal(account: KeyringPair, memberId: BN, proposal: BN): Promise<void> {
     return this.sender.signAndSend(
-      this.api.tx.proposals.voteOnProposal(proposal, new VoteKind('Approve')),
+      this.api.tx.proposalsEngine.vote(memberId, proposal, new VoteKind('Approve')),
       account,
       false
     );
@@ -222,7 +225,8 @@ export class ApiWrapper {
   public batchApproveProposal(council: KeyringPair[], proposal: BN): Promise<void[]> {
     return Promise.all(
       council.map(async keyPair => {
-        await this.approveProposal(keyPair, proposal);
+        const memberId: BN = (await this.getMemberIds(keyPair.address))[0].toBn();
+        await this.approveProposal(keyPair, memberId, proposal);
       })
     );
   }

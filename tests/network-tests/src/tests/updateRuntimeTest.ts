@@ -51,7 +51,9 @@ describe('Runtime upgrade integration tests', () => {
     await apiWrapper.transferBalanceToAccounts(sudo, m2KeyPairs, runtimeVoteFee);
 
     // Proposal creation
+    console.log('proposing new runtime');
     const proposalPromise = apiWrapper.expectProposalCreated();
+    console.log('sending extr');
     await apiWrapper.proposeRuntime(
       m1KeyPairs[0],
       proposalStake,
@@ -60,8 +62,10 @@ describe('Runtime upgrade integration tests', () => {
       runtime
     );
     const proposalNumber = await proposalPromise;
+    console.log('proposed');
 
     // Approving runtime update proposal
+    console.log('approving new runtime');
     const runtimePromise = apiWrapper.expectRuntimeUpgraded();
     await apiWrapper.batchApproveProposal(m2KeyPairs, proposalNumber);
     await runtimePromise;
