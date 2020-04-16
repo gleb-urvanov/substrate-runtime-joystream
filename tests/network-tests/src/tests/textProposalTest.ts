@@ -12,8 +12,6 @@ describe('Text proposal integration tests', () => {
   const keyring = new Keyring({ type: 'sr25519' });
   const nodeUrl: string = process.env.NODE_URL!;
   const sudoUri: string = process.env.SUDO_ACCOUNT_URI!;
-  //TODO stake should be calculated!
-  const proposalStake: BN = new BN(+process.env.RUNTIME_UPGRADE_PROPOSAL_STAKE!);
   const defaultTimeout: number = 120000;
 
   const m1KeyPairs: KeyringPair[] = new Array();
@@ -33,42 +31,35 @@ describe('Text proposal integration tests', () => {
   membershipTest(m2KeyPairs);
   councilTest(m1KeyPairs, m2KeyPairs);
 
-  it('Upgrading the runtime test', async () => {
+  it('Text proposal test', async () => {
     // Setup
     sudo = keyring.addFromUri(sudoUri);
     const proposalText: string = 'Testing proposal';
     const description: string = 'Testing text proposal description';
     const proposalTitle: string = 'Testing text proposal';
+    const runtimeVoteFee: BN = apiWrapper.estimateVoteForProposalFee();
+    await apiWrapper.transferBalanceToAccounts(sudo, m2KeyPairs, runtimeVoteFee);
+
+    //Proposal stake calculation
+    const proposalStake: BN = await apiWrapper.getRequiredProposalStake(25, 10000);
     const runtimeProposalFee: BN = apiWrapper.estimateProposeTextFee(
       proposalStake,
       description,
       description,
       proposalText
     );
-    const runtimeVoteFee: BN = apiWrapper.estimateVoteForProposalFee();
-
-    // Topping the balances
-    await apiWrapper.transferBalance(sudo, m2KeyPairs[0].address, runtimeProposalFee.add(proposalStake));
-    await apiWrapper.transferBalanceToAccounts(sudo, m2KeyPairs, runtimeVoteFee);
+    await apiWrapper.transferBalance(sudo, m1KeyPairs[0].address, runtimeProposalFee.add(proposalStake));
 
     // Proposal creation
-    console.log('alice mem id is ' + (await apiWrapper.getMemberIds(sudo.address))[0]);
-    console.log('proposing new text');
     const proposalPromise = apiWrapper.expectProposalCreated();
-    console.log('sending extr');
-    await apiWrapper.proposeText(m2KeyPairs[0], proposalStake, proposalTitle, description, proposalText);
-    console.log('proposal sent');
+    await apiWrapper.proposeText(m1KeyPairs[0], proposalStake, proposalTitle, description, proposalText);
     const proposalNumber = await proposalPromise;
-    console.log('proposed');
 
     // Approving runtime update proposal
-    console.log('approving new runtime');
-    const runtimePromise = apiWrapper.expectProposalStatusUpdated();
+    const textProposalPromise = apiWrapper.expectProposalStatusUpdated();
     await apiWrapper.batchApproveProposal(m2KeyPairs, proposalNumber);
-    await runtimePromise;
+    await textProposalPromise;
   }).timeout(defaultTimeout);
-
-  //membershipTest(new Array<KeyringPair>());
 
   after(() => {
     apiWrapper.close();

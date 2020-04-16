@@ -1,5 +1,5 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { Option, Vec, Bytes } from '@polkadot/types';
+import { Option, Vec, Bytes, u32 } from '@polkadot/types';
 import { Codec } from '@polkadot/types/types';
 import { KeyringPair } from '@polkadot/keyring/types';
 import { UserInfo, PaidMembershipTerms, MemberId } from '@joystream/types/lib/members';
@@ -7,7 +7,6 @@ import { Seat, VoteKind } from '@joystream/types';
 import { Balance, EventRecord } from '@polkadot/types/interfaces';
 import BN = require('bn.js');
 import { SubmittableExtrinsic } from '@polkadot/api/types';
-import { stringToU8a } from '@polkadot/util';
 import { Sender } from './sender';
 import { Utils } from './utils';
 
@@ -227,7 +226,6 @@ export class ApiWrapper {
     text: string
   ): Promise<void> {
     const memberId: BN = (await this.getMemberIds(account.address))[0].toBn();
-    console.log('memberid ' + memberId);
     return this.sender.signAndSend(
       this.api.tx.proposalsCodex.createTextProposal(memberId, name, description, stake, text),
       account,
@@ -284,11 +282,26 @@ export class ApiWrapper {
     return new Promise(async resolve => {
       await this.api.query.system.events<Vec<EventRecord>>(events => {
         events.forEach(record => {
-          if (record.event.method.toString() === 'ProposalStatusUpdated') {
+          if (
+            record.event.method.toString() === 'ProposalStatusUpdated' &&
+            record.event.data[1].toString().includes('Finalized')
+          ) {
             resolve();
           }
         });
       });
     });
+  }
+
+  private getTotalIssuance(): Promise<BN> {
+    return this.api.query.balances.totalIssuance<Balance>();
+  }
+
+  public async getRequiredProposalStake(numerator: number, denominator: number): Promise<BN> {
+    return (await this.getTotalIssuance()).muln(numerator).divn(denominator);
+  }
+
+  public getProposalCount(): Promise<BN> {
+    return this.api.query.proposalsEngine.proposalCount<u32>();
   }
 }
