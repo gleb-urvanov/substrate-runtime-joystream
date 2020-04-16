@@ -5,6 +5,7 @@ import { membershipTest } from './membershipCreationTest';
 import { councilTest } from './electingCouncilTest';
 import { registerJoystreamTypes } from '@joystream/types';
 import { ApiWrapper } from '../utils/apiWrapper';
+import { v4 as uuid } from 'uuid';
 import BN = require('bn.js');
 
 describe('Text proposal integration tests', () => {
@@ -34,9 +35,9 @@ describe('Text proposal integration tests', () => {
   it('Text proposal test', async () => {
     // Setup
     sudo = keyring.addFromUri(sudoUri);
-    const proposalText: string = 'Testing proposal';
-    const description: string = 'Testing text proposal description';
-    const proposalTitle: string = 'Testing text proposal';
+    const proposalTitle: string = 'Testing proposal ' + uuid().substring(0, 8);
+    const description: string = 'Testing text proposal ' + uuid().substring(0, 8);
+    const proposalText: string = 'Text of the testing proposal ' + uuid().substring(0, 8);
     const runtimeVoteFee: BN = apiWrapper.estimateVoteForProposalFee();
     await apiWrapper.transferBalanceToAccounts(sudo, m2KeyPairs, runtimeVoteFee);
 
