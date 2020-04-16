@@ -59,7 +59,7 @@ use rstd::vec::Vec;
 use runtime_io::blake2_256;
 use sr_primitives::traits::SaturatedConversion;
 use sr_primitives::traits::{One, Zero};
-pub use sr_primitives::Perbill;
+use sr_primitives::Perbill;
 use srml_support::dispatch::DispatchResult;
 use srml_support::traits::{Currency, Get};
 use srml_support::{decl_error, decl_module, decl_storage, ensure, print};
@@ -87,9 +87,6 @@ pub trait Trait:
 
     /// Defines max wasm code length of the runtime upgrade proposal.
     type RuntimeUpgradeWasmProposalMaxLength: Get<u32>;
-
-    /// Defines allowed proposers (by member id list) for the runtime upgrade proposal.
-    type RuntimeUpgradeProposalAllowedProposers: Get<Vec<MemberId<Self>>>;
 
     /// Validates member id and origin combination
     type MembershipOriginValidator: ActorOriginValidator<
@@ -136,9 +133,6 @@ decl_error! {
 
         /// Provided WASM code for the runtime upgrade proposal is empty
         RuntimeProposalIsEmpty,
-
-        /// Runtime upgrade proposal can be created only by hardcoded members
-        RuntimeProposalProposerNotInTheAllowedProposersList,
 
         /// Invalid balance value for the spending proposal
         InvalidSpendingProposalBalance,
@@ -311,11 +305,6 @@ decl_module! {
             ensure!(!wasm.is_empty(), Error::RuntimeProposalIsEmpty);
             ensure!(wasm.len() as u32 <= T::RuntimeUpgradeWasmProposalMaxLength::get(),
                 Error::RuntimeProposalSizeExceeded);
-
-            ensure!(
-                T::RuntimeUpgradeProposalAllowedProposers::get().contains(&member_id),
-                Error::RuntimeProposalProposerNotInTheAllowedProposersList
-            );
 
             let wasm_hash = blake2_256(&wasm);
 
