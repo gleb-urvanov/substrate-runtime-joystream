@@ -4,7 +4,7 @@
   "license": "GPL-3.0-only",
   "scripts": {
     "build": "tsc --build tsconfig.json",
-    "test": "mocha -r ts-node/register src/tests/*",
+    "test": "mocha -r ts-node/register src/tests/**/*",
     "lint": "tslint --project tsconfig.json",
     "prettier": "prettier --write ./src"
   },
