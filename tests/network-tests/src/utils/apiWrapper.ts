@@ -105,8 +105,26 @@ export class ApiWrapper {
     );
   }
 
-  public estimateProposeTextFee(stake: BN, name: string, description: string, runtime: string): BN {
-    return this.estimateTxFee(this.api.tx.proposalsCodex.createTextProposal(stake, name, description, stake, runtime));
+  public estimateProposeTextFee(stake: BN, name: string, description: string, text: string): BN {
+    return this.estimateTxFee(this.api.tx.proposalsCodex.createTextProposal(stake, name, description, stake, text));
+  }
+
+  public estimateProposeSpendingFee(
+    title: string,
+    description: string,
+    stake: BN,
+    balance: BN,
+    destination: string
+  ): BN {
+    return this.estimateTxFee(
+      this.api.tx.proposalsCodex.createSpendingProposal(stake, title, description, stake, balance, destination)
+    );
+  }
+
+  public estimateProposeMintCapacityFee(title: string, description: string, stake: BN, balance: BN): BN {
+    return this.estimateTxFee(
+      this.api.tx.proposalsCodex.createSetCouncilMintCapacityProposal(stake, title, description, stake, balance)
+    );
   }
 
   public estimateVoteForProposalFee(): BN {
@@ -233,6 +251,38 @@ export class ApiWrapper {
     );
   }
 
+  public async proposeSpending(
+    account: KeyringPair,
+    title: string,
+    description: string,
+    stake: BN,
+    balance: BN,
+    destination: string
+  ): Promise<void> {
+    const memberId: BN = (await this.getMemberIds(account.address))[0].toBn();
+    return this.sender.signAndSend(
+      this.api.tx.proposalsCodex.createSpendingProposal(memberId, title, description, stake, balance, destination),
+      account,
+      false
+    );
+  }
+
+  public async proposeMintCapacity(
+    account: KeyringPair,
+    title: string,
+    description: string,
+    stake: BN,
+    balance: BN,
+    destination: string
+  ): Promise<void> {
+    const memberId: BN = (await this.getMemberIds(account.address))[0].toBn();
+    return this.sender.signAndSend(
+      this.api.tx.proposalsCodex.createSetCouncilMintCapacityProposal(memberId, title, description, stake, balance),
+      account,
+      false
+    );
+  }
+
   public approveProposal(account: KeyringPair, memberId: BN, proposal: BN): Promise<void> {
     return this.sender.signAndSend(
       this.api.tx.proposalsEngine.vote(memberId, proposal, new VoteKind('Approve')),
@@ -278,7 +328,7 @@ export class ApiWrapper {
     });
   }
 
-  public expectProposalStatusUpdated(): Promise<void> {
+  public expectProposalFinalized(): Promise<void> {
     return new Promise(async resolve => {
       await this.api.query.system.events<Vec<EventRecord>>(events => {
         events.forEach(record => {
@@ -293,12 +343,14 @@ export class ApiWrapper {
     });
   }
 
-  private getTotalIssuance(): Promise<BN> {
+  public getTotalIssuance(): Promise<BN> {
     return this.api.query.balances.totalIssuance<Balance>();
   }
 
   public async getRequiredProposalStake(numerator: number, denominator: number): Promise<BN> {
-    return (await this.getTotalIssuance()).muln(numerator).divn(denominator);
+    const issuance: number = await (await this.getTotalIssuance()).toNumber();
+    const stake = (issuance * numerator) / denominator;
+    return new BN(stake.toFixed(0));
   }
 
   public getProposalCount(): Promise<BN> {

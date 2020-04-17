@@ -1,19 +1,19 @@
-import { initConfig } from '../utils/config';
+import { initConfig } from '../../utils/config';
 import { Keyring, WsProvider } from '@polkadot/api';
-import { Bytes } from '@polkadot/types';
 import { KeyringPair } from '@polkadot/keyring/types';
-import { membershipTest } from './membershipCreationTest';
-import { councilTest } from './electingCouncilTest';
+import { membershipTest } from '../membershipCreationTest';
+import { councilTest } from '../electingCouncilTest';
 import { registerJoystreamTypes } from '@joystream/types';
-import { ApiWrapper } from '../utils/apiWrapper';
+import { ApiWrapper } from '../../utils/apiWrapper';
+import { v4 as uuid } from 'uuid';
 import BN = require('bn.js');
 
-describe.skip('Runtime upgrade integration tests', () => {
+describe('Spending proposal network tests', () => {
   initConfig();
   const keyring = new Keyring({ type: 'sr25519' });
   const nodeUrl: string = process.env.NODE_URL!;
   const sudoUri: string = process.env.SUDO_ACCOUNT_URI!;
-  const proposalStake: BN = new BN(+process.env.RUNTIME_UPGRADE_PROPOSAL_STAKE!);
+  const spendingBalance: BN = new BN(+process.env.SPENDING_BALANCE!);
   const defaultTimeout: number = 120000;
 
   const m1KeyPairs: KeyringPair[] = new Array();
@@ -33,45 +33,41 @@ describe.skip('Runtime upgrade integration tests', () => {
   membershipTest(m2KeyPairs);
   councilTest(m1KeyPairs, m2KeyPairs);
 
-  it('Upgrading the runtime test', async () => {
+  it('Spending proposal test', async () => {
     // Setup
     sudo = keyring.addFromUri(sudoUri);
-    const runtime: Bytes = await apiWrapper.getRuntime();
-    const description: string = 'runtime upgrade proposal which is used for API integration testing';
-    const runtimeProposalFee: BN = apiWrapper.estimateProposeRuntimeUpgradeFee(
-      proposalStake,
-      description,
-      description,
-      runtime
-    );
+    const description: string = 'spending proposal which is used for API network testing with some mock data';
     const runtimeVoteFee: BN = apiWrapper.estimateVoteForProposalFee();
 
     // Topping the balances
+    const proposalStake: BN = await apiWrapper.getRequiredProposalStake(25, 10000);
+    const runtimeProposalFee: BN = apiWrapper.estimateProposeSpendingFee(
+      description,
+      description,
+      proposalStake,
+      spendingBalance,
+      sudo.address
+    );
     await apiWrapper.transferBalance(sudo, m1KeyPairs[0].address, runtimeProposalFee.add(proposalStake));
     await apiWrapper.transferBalanceToAccounts(sudo, m2KeyPairs, runtimeVoteFee);
 
     // Proposal creation
-    console.log('proposing new runtime');
     const proposalPromise = apiWrapper.expectProposalCreated();
-    console.log('sending extr');
-    await apiWrapper.proposeRuntime(
+    await apiWrapper.proposeSpending(
       m1KeyPairs[0],
+      'testing spending' + uuid().substring(0, 8),
+      'spending to test proposal functionality' + uuid().substring(0, 8),
       proposalStake,
-      'testing runtime',
-      'runtime to test proposal functionality',
-      runtime
+      spendingBalance,
+      sudo.address
     );
     const proposalNumber = await proposalPromise;
-    console.log('proposed');
 
     // Approving runtime update proposal
-    console.log('approving new runtime');
-    const runtimePromise = apiWrapper.expectRuntimeUpgraded();
+    const runtimePromise = apiWrapper.expectProposalFinalized();
     await apiWrapper.batchApproveProposal(m2KeyPairs, proposalNumber);
     await runtimePromise;
   }).timeout(defaultTimeout);
-
-  membershipTest(new Array<KeyringPair>());
 
   after(() => {
     apiWrapper.close();
