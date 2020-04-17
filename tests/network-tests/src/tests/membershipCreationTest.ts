@@ -67,7 +67,7 @@ export function membershipTest(nKeyPairs: KeyringPair[]) {
     await apiWrapper.buyMembership(aKeyPair, paidTerms, `late_member_${aKeyPair.address.substring(0, 8)}`, true);
     apiWrapper
       .getMemberIds(aKeyPair.address)
-      .then(membership => assert(membership.length == 0, 'Account A is a member'));
+      .then(membership => assert(membership.length === 0, 'Account A is a member'));
   }).timeout(defaultTimeout);
 
   it('Account A was able to buy the membership with sufficient funds', async () => {
