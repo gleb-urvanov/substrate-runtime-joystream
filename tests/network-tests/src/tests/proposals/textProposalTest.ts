@@ -1,10 +1,10 @@
-import { initConfig } from '../utils/config';
+import { initConfig } from '../../utils/config';
 import { Keyring, WsProvider } from '@polkadot/api';
 import { KeyringPair } from '@polkadot/keyring/types';
-import { membershipTest } from './membershipCreationTest';
-import { councilTest } from './electingCouncilTest';
+import { membershipTest } from '../membershipCreationTest';
+import { councilTest } from '../electingCouncilTest';
 import { registerJoystreamTypes } from '@joystream/types';
-import { ApiWrapper } from '../utils/apiWrapper';
+import { ApiWrapper } from '../../utils/apiWrapper';
 import { v4 as uuid } from 'uuid';
 import BN = require('bn.js');
 
@@ -41,7 +41,7 @@ describe.skip('Text proposal network tests', () => {
     const runtimeVoteFee: BN = apiWrapper.estimateVoteForProposalFee();
     await apiWrapper.transferBalanceToAccounts(sudo, m2KeyPairs, runtimeVoteFee);
 
-    //Proposal stake calculation
+    // Proposal stake calculation
     const proposalStake: BN = await apiWrapper.getRequiredProposalStake(25, 10000);
     const runtimeProposalFee: BN = apiWrapper.estimateProposeTextFee(
       proposalStake,

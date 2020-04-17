@@ -33,7 +33,7 @@ describe.skip('Mint capa proposal network tests', () => {
   membershipTest(m2KeyPairs);
   councilTest(m1KeyPairs, m2KeyPairs);
 
-  //TODO implement the test
+  // TODO implement the test
   it('Mint capacity proposal test', async () => {
     // Setup
     sudo = keyring.addFromUri(sudoUri);
