@@ -8,6 +8,7 @@ import { registerJoystreamTypes, Seat } from '@joystream/types';
 import { assert } from 'chai';
 import { v4 as uuid } from 'uuid';
 import { Utils } from '../../utils/utils';
+import tap = require('tap');
 
 export function councilTest(m1KeyPairs: KeyringPair[], m2KeyPairs: KeyringPair[]) {
   initConfig();
@@ -21,14 +22,13 @@ export function councilTest(m1KeyPairs: KeyringPair[], m2KeyPairs: KeyringPair[]
   let sudo: KeyringPair;
   let apiWrapper: ApiWrapper;
 
-  before(async function () {
-    this.timeout(defaultTimeout);
+  tap.test('Council election setup', async () => {
     registerJoystreamTypes();
     const provider = new WsProvider(nodeUrl);
     apiWrapper = await ApiWrapper.create(provider);
   });
 
-  it('Electing a council test', async () => {
+  tap.test('Electing a council test', async () => {
     // Setup goes here because M keypairs are generated after before() function
     sudo = keyring.addFromUri(sudoUri);
     let now = await apiWrapper.getBestBlock();
@@ -111,17 +111,16 @@ export function councilTest(m1KeyPairs: KeyringPair[], m2KeyPairs: KeyringPair[]
         `Member ${seat.member} has unexpected stake ${Utils.getTotalStake(seat)}`
       )
     );
-  }).timeout(defaultTimeout);
+  });
 
-  after(() => {
+  tap.teardown(() => {
     apiWrapper.close();
   });
 }
 
-describe.skip('Council integration tests', () => {
-  const m1KeyPairs: KeyringPair[] = new Array();
-  const m2KeyPairs: KeyringPair[] = new Array();
-  membershipTest(m1KeyPairs);
-  membershipTest(m2KeyPairs);
-  councilTest(m1KeyPairs, m2KeyPairs);
-});
+tap.setTimeout(300000);
+const m1KeyPairs: KeyringPair[] = new Array();
+const m2KeyPairs: KeyringPair[] = new Array();
+membershipTest(m1KeyPairs);
+membershipTest(m2KeyPairs);
+councilTest(m1KeyPairs, m2KeyPairs);

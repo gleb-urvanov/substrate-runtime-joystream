@@ -7,17 +7,22 @@
     "test": "mocha -r ts-node/register src/tests/constantinople/proposals/*",
     "test-migration": "mocha -r ts-node/register src/tests/rome/* && mocha -r ts-node/register src/tests/constantinople/*",
     "lint": "tslint --project tsconfig.json",
-    "prettier": "prettier --write ./src"
+    "prettier": "prettier --write ./src",
+    "tap-test": "tap --files=./src/tests/constantinople/membershipCreationTest.ts",
+    "tap-test-two": "tap --files=./src/tests/constantinople/membershipCreationTest.ts --files=./src/tests/constantinople/electingCouncilTest.ts",
+    "tap": "tap"
   },
   "dependencies": {
     "@joystream/types": "../joystream-apps/packages/joy-types",
-    "@rome/types@npm:@joystream/types": "^0.7.0",
     "@polkadot/api": "^0.96.1",
     "@polkadot/keyring": "^1.7.0-beta.5",
+    "@rome/types@npm:@joystream/types": "^0.7.0",
     "@types/bn.js": "^4.11.5",
+    "@types/tap": "^14.10.0",
     "bn.js": "^4.11.8",
     "dotenv": "^8.2.0",
     "fs": "^0.0.1-security",
+    "tap": "^14.10.7",
     "uuid": "^7.0.3"
   },
   "devDependencies": {
