@@ -7,6 +7,7 @@ import BN = require('bn.js');
 import { ApiWrapper } from '../../utils/apiWrapper';
 import { initConfig } from '../../utils/config';
 import { v4 as uuid } from 'uuid';
+import { step } from 'mocha-steps';
 
 export function membershipTest(nKeyPairs: KeyringPair[]) {
   initConfig();
@@ -22,8 +23,7 @@ export function membershipTest(nKeyPairs: KeyringPair[]) {
   let membershipFee: BN;
   let membershipTransactionFee: BN;
 
-  before(async function () {
-    this.timeout(defaultTimeout);
+  step('\n\tSetup membership creation test', async () => {
     registerJoystreamTypes();
     const provider = new WsProvider(nodeUrl);
     apiWrapper = await ApiWrapper.create(provider);
@@ -40,9 +40,9 @@ export function membershipTest(nKeyPairs: KeyringPair[]) {
     );
     await apiWrapper.transferBalanceToAccounts(sudo, nKeyPairs, membershipTransactionFee.add(new BN(membershipFee)));
     await apiWrapper.transferBalance(sudo, aKeyPair.address, membershipTransactionFee);
-  });
+  }).timeout(defaultTimeout);
 
-  it('Buy membeship is accepted with sufficient funds', async () => {
+  step('\n\tBuy membeship is accepted with sufficient funds', async () => {
     await Promise.all(
       nKeyPairs.map(async (keyPair, index) => {
         await apiWrapper.buyMembership(keyPair, paidTerms, `new_member_${index}${keyPair.address.substring(0, 8)}`);
@@ -53,9 +53,10 @@ export function membershipTest(nKeyPairs: KeyringPair[]) {
         .getMemberIds(keyPair.address)
         .then(membership => assert(membership.length > 0, `Account ${keyPair.address} is not a member`))
     );
+    assert.fail('failed as planned');
   }).timeout(defaultTimeout);
 
-  it('Account A can not buy the membership with insufficient funds', async () => {
+  step('\n\tAccount A can not buy the membership with insufficient funds', async () => {
     await apiWrapper
       .getBalance(aKeyPair.address)
       .then(balance =>
@@ -70,7 +71,7 @@ export function membershipTest(nKeyPairs: KeyringPair[]) {
       .then(membership => assert(membership.length === 0, 'Account A is a member'));
   }).timeout(defaultTimeout);
 
-  it('Account A was able to buy the membership with sufficient funds', async () => {
+  step('\n\tAccount A was able to buy the membership with sufficient funds', async () => {
     await apiWrapper.transferBalance(sudo, aKeyPair.address, membershipFee.add(membershipTransactionFee));
     apiWrapper
       .getBalance(aKeyPair.address)
@@ -78,9 +79,11 @@ export function membershipTest(nKeyPairs: KeyringPair[]) {
         assert(balance.toBn() >= membershipFee, 'The account balance is insufficient to purchase membership')
       );
     await apiWrapper.buyMembership(aKeyPair, paidTerms, `late_member_${aKeyPair.address.substring(0, 8)}`);
-    apiWrapper
-      .getMemberIds(aKeyPair.address)
-      .then(membership => assert(membership.length > 0, 'Account A is a not member'));
+    const membership = await apiWrapper.getMemberIds(aKeyPair.address);
+    assert(membership.length < 0, 'Account A is a not member');
+    // apiWrapper
+    //   .getMemberIds(aKeyPair.address)
+    //   .then(membership => assert(membership.length < 0, 'Account A is a not member'));
   }).timeout(defaultTimeout);
 
   after(() => {
@@ -88,7 +91,7 @@ export function membershipTest(nKeyPairs: KeyringPair[]) {
   });
 }
 
-describe.skip('Membership integration tests', () => {
+describe('Membership integration tests', () => {
   const nKeyPairs: KeyringPair[] = new Array();
   membershipTest(nKeyPairs);
 });
