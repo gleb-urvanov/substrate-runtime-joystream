@@ -7,7 +7,7 @@ import BN = require('bn.js');
 import { ApiWrapper } from '../../utils/apiWrapper';
 import { initConfig } from '../../utils/config';
 import { v4 as uuid } from 'uuid';
-import tap from 'tap';
+import test from 'tape';
 
 export function membershipTest(nKeyPairs: KeyringPair[]) {
   initConfig();
@@ -23,7 +23,7 @@ export function membershipTest(nKeyPairs: KeyringPair[]) {
   let membershipFee: BN;
   let membershipTransactionFee: BN;
 
-  tap.test('Buy membership setup', async t => {
+  test('Buy membership setup', async t => {
     // t.setTimeout(defaultTimeout);
     registerJoystreamTypes();
     const provider = new WsProvider(nodeUrl);
@@ -43,7 +43,7 @@ export function membershipTest(nKeyPairs: KeyringPair[]) {
     await apiWrapper.transferBalance(sudo, aKeyPair.address, membershipTransactionFee);
   });
 
-  tap.test('Buy membeship is accepted with sufficient funds', async t => {
+  test('Buy membeship is accepted with sufficient funds', async t => {
     // t.setTimeout(defaultTimeout);
     await Promise.all(
       nKeyPairs.map(async (keyPair, index) => {
@@ -55,9 +55,10 @@ export function membershipTest(nKeyPairs: KeyringPair[]) {
         .getMemberIds(keyPair.address)
         .then(membership => assert(membership.length > 0, `Account ${keyPair.address} is not a member`))
     );
+    assert.fail('failed to demonstrate fail behavior');
   });
 
-  tap.test('Account A can not buy the membership with insufficient funds', async t => {
+  test('Account A can not buy the membership with insufficient funds', async t => {
     // t.setTimeout(defaultTimeout);
     await apiWrapper
       .getBalance(aKeyPair.address)
@@ -73,7 +74,7 @@ export function membershipTest(nKeyPairs: KeyringPair[]) {
       .then(membership => assert(membership.length === 0, 'Account A is a member'));
   });
 
-  tap.test('Account A was able to buy the membership with sufficient funds', async t => {
+  test('Account A was able to buy the membership with sufficient funds', async t => {
     // t.setTimeout(defaultTimeout);
     await apiWrapper.transferBalance(sudo, aKeyPair.address, membershipFee.add(membershipTransactionFee));
     apiWrapper
@@ -87,12 +88,12 @@ export function membershipTest(nKeyPairs: KeyringPair[]) {
       .then(membership => assert(membership.length > 0, 'Account A is a not member'));
   });
 
-  tap.teardown(() => {
+  test.onFinish(() => {
     apiWrapper.close();
   });
 }
 
-tap.setTimeout(60000);
+// test..setTimeout(60000);
 const nKeyPairs: KeyringPair[] = new Array();
 membershipTest(nKeyPairs);
 

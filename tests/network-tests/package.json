@@ -9,6 +9,7 @@
     "lint": "tslint --project tsconfig.json",
     "prettier": "prettier --write ./src",
     "tap-test": "tap --files=./src/tests/constantinople/membershipCreationTest.ts",
+    "tape-test": "tape -r ts-node/register ./src/tests/constantinople/membershipCreationTest.ts",
     "tap-test-two": "tap --files=./src/tests/constantinople/membershipCreationTest.ts --files=./src/tests/constantinople/electingCouncilTest.ts",
     "tap": "tap"
   },
@@ -29,10 +30,12 @@
     "@polkadot/ts": "^0.3.14",
     "@types/chai": "^4.2.11",
     "@types/mocha": "^7.0.2",
+    "@types/tape": "^4.13.0",
     "@types/uuid": "^7.0.2",
     "chai": "^4.2.0",
     "mocha": "^7.1.1",
     "prettier": "2.0.2",
+    "tape": "^5.0.0",
     "ts-node": "^8.8.1",
     "tslint": "^6.1.0",
     "typescript": "^3.8.3"
