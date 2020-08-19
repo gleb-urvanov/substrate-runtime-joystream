@@ -28,6 +28,7 @@ before_install:
         travis_terminate 0
       fi
     fi
+  - sudo apt-get update -qq
 
 install:
   - rustup install nightly-2020-05-23
