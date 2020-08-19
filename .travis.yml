@@ -36,7 +36,7 @@ install:
   # travis installs rust using rustup with the "minimal" profile so these tools are not installed by default
   - rustup component add rustfmt
   - rustup component add clippy
-  - pip install ansible
+  - sudo pip install ansible
 
 before_script:
   - cargo fmt --all -- --check
