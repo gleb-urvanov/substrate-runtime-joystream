@@ -54,4 +54,4 @@ before_script:
 script:
 #  - echo job executed
   - cd ./devops/ansible
-  - ansible-playbook -i hosts build-and-run-tests-two-nodes-playbook.yml --become -vvvv
+  - travis_wait 50 ansible-playbook -i hosts build-and-run-tests-two-nodes-playbook.yml --become -v
