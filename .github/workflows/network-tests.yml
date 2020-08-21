@@ -59,7 +59,7 @@ jobs:
 #        with:
 #          args: https://getsubstrate.io -sSf
       - name: install toolchain
-        run: https://getsubstrate.io -sSf | bash -s -- --fast
+        run: curl https://getsubstrate.io -sSf | bash -s -- --fast
       - uses: actions-rs/cargo@v1
         with:
           command: build
