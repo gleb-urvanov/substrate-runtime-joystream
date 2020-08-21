@@ -1,5 +1,9 @@
 - name: install pip and npm on Debian
   block:
+    - name: create temporary folder
+      file:
+        path: ../../.tmp
+        state: directory
     - name: install pip using apt
       apt: name=python-pip state=present
     - name: install npm using apt
