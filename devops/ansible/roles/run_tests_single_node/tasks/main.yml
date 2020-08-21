@@ -24,6 +24,9 @@
         chdir: ../../tests/network-tests/
 
   always:
+    - name: display tests log
+      shell: cat .tmp/tests.log
+
     - name: stop docker container
       docker_container:
         name: "joystream-node-testing"

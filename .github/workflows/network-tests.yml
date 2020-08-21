@@ -65,9 +65,6 @@ jobs:
         node-version: [12.x]
     steps:
       - uses: actions/checkout@v1
-#      - uses: actions-rs/toolchain@v1
-#        with:
-#          toolchain: nightly
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -77,5 +74,3 @@ jobs:
         run: |
           cd ./devops/ansible
           ansible-playbook -i hosts build-and-run-tests-single-node-playbook.yml --become -v
-#      - name: create test chaispec
-#        run: ./scripts/create-test-chainspec.sh
