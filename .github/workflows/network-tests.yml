@@ -46,5 +46,8 @@ jobs:
           toolchain: nightly
       - uses: actions-rs/cargo@v1
         with:
+          command: install wasm-pack
+      - uses: actions-rs/cargo@v1
+        with:
           command: build
           args: --release --verbose
