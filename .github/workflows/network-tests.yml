@@ -36,8 +36,29 @@ jobs:
 #        yarn install --frozen-lockfile --network-timeout 120000
 #        yarn workspace joystream-testing checks
 
-  build_node:
-    name: Build node
+#  build_node:
+#    name: Build node
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        node-version: [12.x]
+#    steps:
+#      - uses: actions/checkout@v1
+#      - uses: actions-rs/toolchain@v1
+#        with:
+#          toolchain: nightly
+#      - uses: actions/setup-node@v1
+#        with:
+#          node-version: ${{ matrix.node-version }}
+#      - name: install toolchain
+#        run: curl https://getsubstrate.io -sSf | bash -s -- --fast
+#      - uses: actions-rs/cargo@v1
+#        with:
+#          command: build
+#          args: --release --verbose
+
+  run_ansible_tests:
+    name: run network tests using ansible
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -47,20 +68,14 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
-#      - uses: jetli/wasm-pack-action@v0.3.0
-#        with:
-#        # Optional version of wasm-pack to install(eg. 'v0.9.1', 'latest')
-#          version: 'latest'
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-#      - name: curl
-#        uses: wei/curl@master
-#        with:
-#          args: https://getsubstrate.io -sSf
       - name: install toolchain
         run: curl https://getsubstrate.io -sSf | bash -s -- --fast
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release --verbose
+      - name: install ansible
+        run: sudo pip install ansible
+      - name: run build and tests
+        run: |
+          cd ./devops/ansible
+          ansible-playbook -i hosts build-image-playbook.yml --become -v
