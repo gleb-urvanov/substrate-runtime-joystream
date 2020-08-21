@@ -44,9 +44,10 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
-      - uses: actions-rs/cargo@v1
+      - uses: jetli/wasm-pack-action@v0.3.0
         with:
-          command: install wasm-pack
+        # Optional version of wasm-pack to install(eg. 'v0.9.1', 'latest')
+          version: 'latest'
       - uses: actions-rs/cargo@v1
         with:
           command: build
