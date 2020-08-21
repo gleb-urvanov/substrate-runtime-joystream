@@ -65,17 +65,17 @@ jobs:
         node-version: [12.x]
     steps:
       - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
+#      - uses: actions-rs/toolchain@v1
+#        with:
+#          toolchain: nightly
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
       - name: install toolchain
         run: curl https://getsubstrate.io -sSf | bash -s -- --fast
-      - name: install ansible
-        run: sudo pip install ansible
+#      - name: install ansible
+#        run: sudo pip install ansible
       - name: run build and tests
         run: |
           cd ./devops/ansible
-          ansible-playbook -i hosts build-image-playbook.yml --become -v
+          ansible-playbook -i hosts build-and-run-tests-single-node-playbook.yml --become -v
