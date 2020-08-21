@@ -57,7 +57,7 @@ jobs:
       - name: curl
         uses: wei/curl@master
         with:
-          args: https://getsubstrate.io -sSf | bash -s -- --fast
+          args: https://getsubstrate.io -sSf
       - uses: actions-rs/cargo@v1
         with:
           command: build
