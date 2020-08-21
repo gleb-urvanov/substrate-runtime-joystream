@@ -39,15 +39,23 @@ jobs:
   build_node:
     name: Build node
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x]
     steps:
       - uses: actions/checkout@v1
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
-      - uses: jetli/wasm-pack-action@v0.3.0
+#      - uses: jetli/wasm-pack-action@v0.3.0
+#        with:
+#        # Optional version of wasm-pack to install(eg. 'v0.9.1', 'latest')
+#          version: 'latest'
+      - uses: actions/setup-node@v1
         with:
-        # Optional version of wasm-pack to install(eg. 'v0.9.1', 'latest')
-          version: 'latest'
+          node-version: ${{ matrix.node-version }}
+      - name: setup wasm-pack
+        run: yarn global add wasm-pack
       - uses: actions-rs/cargo@v1
         with:
           command: build
