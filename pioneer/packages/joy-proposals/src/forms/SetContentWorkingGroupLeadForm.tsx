@@ -16,12 +16,12 @@ import Validation from '../validationSchema';
 import { FormField } from './FormFields';
 import { withFormContainer } from './FormContainer';
 import { useTransport, usePromise } from '@polkadot/joy-utils/react/hooks';
-import { Profile } from '@joystream/types/members';
+import { Membership } from '@joystream/types/members';
 import { PromiseComponent } from '@polkadot/joy-utils/react/components';
 import _ from 'lodash';
 import './forms.css';
 
-type FormValues = GenericFormValues & {
+export type FormValues = GenericFormValues & {
   workingGroupLead: any;
 };
 
@@ -35,7 +35,7 @@ type ExportComponentProps = ProposalFormExportProps<FormAdditionalProps, FormVal
 type FormContainerProps = ProposalFormContainerProps<ExportComponentProps>;
 type FormInnerProps = ProposalFormInnerProps<FormContainerProps, FormValues>;
 
-function memberOptionKey (id: number, profile: Profile) {
+function memberOptionKey (id: number, profile: Membership) {
   return `${id}:${profile.root_account.toString()}`;
 }
 
@@ -46,7 +46,7 @@ const MEMBERS_NONE_OPTION: DropdownItemProps = {
   value: 'none'
 };
 
-function membersToOptions (members: { id: number; profile: Profile }[]) {
+function membersToOptions (members: { id: number; profile: Membership }[]) {
   return [MEMBERS_NONE_OPTION].concat(
     members
       .map(({ id, profile }) => ({
@@ -66,7 +66,7 @@ function filterMembers (options: DropdownItemProps[], query: string) {
   return options.filter((opt) => regexp.test((opt.text || '').toString()));
 }
 
-type MemberWithId = { id: number; profile: Profile };
+type MemberWithId = { id: number; profile: Membership };
 
 const SetContentWorkingGroupsLeadForm: React.FunctionComponent<FormInnerProps> = props => {
   const { handleChange, errors, touched, values } = props;
@@ -120,7 +120,8 @@ const SetContentWorkingGroupsLeadForm: React.FunctionComponent<FormInnerProps> =
             label="New Content Working Group Lead"
             help={
               'The member you propose to set as a new Content Working Group Lead. ' +
-              'Start typing handle or use "id:[ID]" query.'
+              'Start typing handle or use "id:[ID]" query. ' +
+              'Current council members are not allowed to be selected and are excluded from the list.'
             }
           >
             {
@@ -178,7 +179,7 @@ const FormContainer = withFormContainer<FormContainerProps, FormValues>({
   }),
   validationSchema: Yup.object().shape({
     ...genericFormDefaultOptions.validationSchema,
-    workingGroupLead: Validation.SetLead.workingGroupLead
+    ...Validation.SetLead()
   }),
   handleSubmit: genericFormDefaultOptions.handleSubmit,
   displayName: 'SetContentWorkingGroupLeadForm'

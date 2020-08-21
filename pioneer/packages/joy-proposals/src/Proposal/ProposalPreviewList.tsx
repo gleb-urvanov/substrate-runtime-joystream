@@ -1,85 +1,97 @@
 import React, { useState } from 'react';
-import { Card, Container, Menu } from 'semantic-ui-react';
+import { Button, Card, Container, Icon, Pagination } from 'semantic-ui-react';
+import styled from 'styled-components';
+import { Link, useLocation } from 'react-router-dom';
 
 import ProposalPreview from './ProposalPreview';
-import { ParsedProposal } from '@polkadot/joy-utils/types/proposals';
+import { ParsedProposal, proposalStatusFilters, ProposalStatusFilter, ProposalsBatch } from '@polkadot/joy-utils/types/proposals';
 import { useTransport, usePromise } from '@polkadot/joy-utils/react/hooks';
 import { PromiseComponent } from '@polkadot/joy-utils/react/components';
 import { withCalls } from '@polkadot/react-api';
 import { BlockNumber } from '@polkadot/types/interfaces';
-
-const filters = ['All', 'Active', 'Canceled', 'Approved', 'Rejected', 'Slashed', 'Expired'] as const;
-
-type ProposalFilter = typeof filters[number];
-
-function filterProposals (filter: ProposalFilter, proposals: ParsedProposal[]) {
-  if (filter === 'All') {
-    return proposals;
-  } else if (filter === 'Active') {
-    return proposals.filter((prop: ParsedProposal) => {
-      const [activeOrFinalized] = Object.keys(prop.status);
-      return activeOrFinalized === 'Active';
-    });
-  }
-
-  return proposals.filter((prop: ParsedProposal) => {
-    if (prop.status.Finalized == null || prop.status.Finalized.proposalStatus == null) {
-      return false;
-    }
-
-    const [finalStatus] = Object.keys(prop.status.Finalized.proposalStatus);
-    return finalStatus === filter;
-  });
-}
-
-function mapFromProposals (proposals: ParsedProposal[]) {
-  const proposalsMap = new Map<ProposalFilter, ParsedProposal[]>();
-
-  proposalsMap.set('All', proposals);
-  proposalsMap.set('Canceled', filterProposals('Canceled', proposals));
-  proposalsMap.set('Active', filterProposals('Active', proposals));
-  proposalsMap.set('Approved', filterProposals('Approved', proposals));
-  proposalsMap.set('Rejected', filterProposals('Rejected', proposals));
-  proposalsMap.set('Slashed', filterProposals('Slashed', proposals));
-  proposalsMap.set('Expired', filterProposals('Expired', proposals));
-
-  return proposalsMap;
-}
+import { Dropdown } from '@polkadot/react-components';
 
 type ProposalPreviewListProps = {
   bestNumber?: BlockNumber;
 };
 
-function ProposalPreviewList ({ bestNumber }: ProposalPreviewListProps) {
-  const transport = useTransport();
-  const [proposals, error, loading] = usePromise<ParsedProposal[]>(() => transport.proposals.proposals(), []);
-  const [activeFilter, setActiveFilter] = useState<ProposalFilter>('All');
+const FilterContainer = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+`;
+const StyledDropdown = styled(Dropdown)`
+  .dropdown {
+    width: 200px;
+  }
+`;
+const PaginationBox = styled.div`
+  margin-bottom: 1em;
+`;
 
-  const proposalsMap = mapFromProposals(proposals);
-  const filteredProposals = proposalsMap.get(activeFilter) as ParsedProposal[];
+function ProposalPreviewList ({ bestNumber }: ProposalPreviewListProps) {
+  const { pathname } = useLocation();
+  const transport = useTransport();
+  const [activeFilter, setActiveFilter] = useState<ProposalStatusFilter>('All');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [proposalsBatch, error, loading] = usePromise<ProposalsBatch | undefined>(
+    () => transport.proposals.proposalsBatch(activeFilter, currentPage),
+    undefined,
+    [activeFilter, currentPage]
+  );
+
+  const filterOptions = proposalStatusFilters.map(filter => ({
+    text: filter,
+    value: filter
+  }));
+
+  const _onChangePrefix = (f: ProposalStatusFilter) => {
+    setCurrentPage(1);
+    setActiveFilter(f);
+  };
 
   return (
-    <Container className="Proposal">
+    <Container className="Proposal" fluid>
+      <FilterContainer>
+        <Button primary as={Link} to={`${pathname}/new`}>
+          <Icon name="add" />
+          New proposal
+        </Button>
+        <StyledDropdown
+          label="Proposal state"
+          options={filterOptions}
+          value={activeFilter}
+          onChange={_onChangePrefix}
+        />
+      </FilterContainer>
       <PromiseComponent error={ error } loading={ loading } message="Fetching proposals...">
-        <Menu tabular className="list-menu">
-          {filters.map((filter, idx) => (
-            <Menu.Item
-              key={`${filter} - ${idx}`}
-              name={`${filter.toLowerCase()} - ${(proposalsMap.get(filter) as ParsedProposal[]).length}`}
-              active={activeFilter === filter}
-              onClick={() => setActiveFilter(filter)}
-            />
-          ))}
-        </Menu>
-        {
-          filteredProposals.length ? (
-            <Card.Group>
-              {filteredProposals.map((prop: ParsedProposal, idx: number) => (
-                <ProposalPreview key={`${prop.title}-${idx}`} proposal={prop} bestNumber={bestNumber} />
-              ))}
-            </Card.Group>
-          ) : `There are currently no ${activeFilter !== 'All' ? activeFilter.toLocaleLowerCase() : 'submitted'} proposals.`
-        }
+        { proposalsBatch && (<>
+          <PaginationBox>
+            { proposalsBatch.totalBatches > 1 && (
+              <Pagination
+                activePage={ currentPage }
+                ellipsisItem={{ content: <Icon name='ellipsis horizontal' />, icon: true }}
+                firstItem={{ content: <Icon name='angle double left' />, icon: true }}
+                lastItem={{ content: <Icon name='angle double right' />, icon: true }}
+                prevItem={{ content: <Icon name='angle left' />, icon: true }}
+                nextItem={{ content: <Icon name='angle right' />, icon: true }}
+                totalPages={ proposalsBatch.totalBatches }
+                onPageChange={ (e, data) => setCurrentPage((data.activePage && parseInt(data.activePage.toString())) || 1) }
+              />
+            ) }
+          </PaginationBox>
+           { proposalsBatch.proposals.length
+             ? (
+               <Card.Group>
+                 {proposalsBatch.proposals.map((prop: ParsedProposal, idx: number) => (
+                   <ProposalPreview key={`${prop.title}-${idx}`} proposal={prop} bestNumber={bestNumber} />
+                 ))}
+               </Card.Group>
+             )
+             : `There are currently no ${activeFilter !== 'All' ? activeFilter.toLocaleLowerCase() : 'submitted'} proposals.`
+           }
+        </>) }
       </PromiseComponent>
     </Container>
   );
