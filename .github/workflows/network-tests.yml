@@ -54,10 +54,12 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: curl
-        uses: wei/curl@master
-        with:
-          args: https://getsubstrate.io -sSf
+#      - name: curl
+#        uses: wei/curl@master
+#        with:
+#          args: https://getsubstrate.io -sSf
+      - name: install toolchain
+        run: https://getsubstrate.io -sSf | bash -s -- --fast
       - uses: actions-rs/cargo@v1
         with:
           command: build
