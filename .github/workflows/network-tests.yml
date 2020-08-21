@@ -78,4 +78,4 @@ jobs:
 #          cd ./devops/ansible
 #          ansible-playbook -i hosts build-and-run-tests-single-node-playbook.yml --become -v
       - name: create test chaispec
-        run: /scripts/create-test-chainspec.sh
+        run: ./scripts/create-test-chainspec.sh
