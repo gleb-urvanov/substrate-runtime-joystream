@@ -72,8 +72,9 @@ tap.mocha.describe('Worker application happy case scenario', async () => {
     unstakingPeriod,
     WorkingGroups.StorageWorkingGroup
   )
-  tap.test('Add worker opening with 0 stake, expect failure', async () =>
-    addWorkerOpeningWithoutStakeFixture.runner(true)
+  tap.test(
+    'Add worker opening with 0 stake, expect failure',
+    async () => await addWorkerOpeningWithoutStakeFixture.runner(true)
   )
 
   const addWorkerOpeningWithoutUnstakingPeriodFixture: AddWorkerOpeningFixture = new AddWorkerOpeningFixture(
@@ -87,8 +88,9 @@ tap.mocha.describe('Worker application happy case scenario', async () => {
     new BN(0),
     WorkingGroups.StorageWorkingGroup
   )
-  tap.test('Add worker opening with 0 unstaking period, expect failure', async () =>
-    addWorkerOpeningWithoutUnstakingPeriodFixture.runner(true)
+  tap.test(
+    'Add worker opening with 0 unstaking period, expect failure',
+    async () => await addWorkerOpeningWithoutUnstakingPeriodFixture.runner(true)
   )
 
   if (!db.hasLeader(apiWrapper.getWorkingGroupString(WorkingGroups.StorageWorkingGroup))) {
@@ -98,7 +100,7 @@ tap.mocha.describe('Worker application happy case scenario', async () => {
       sudo,
       WorkingGroups.StorageWorkingGroup
     )
-    tap.test('Leaving lead role', async () => leaveRoleFixture.runner(false))
+    tap.test('Leaving lead role', async () => await leaveRoleFixture.runner(false))
   }
 
   closeApi(apiWrapper)

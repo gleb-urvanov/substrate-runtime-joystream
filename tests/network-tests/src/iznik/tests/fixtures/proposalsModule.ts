@@ -4,11 +4,10 @@ import { v4 as uuid } from 'uuid'
 import BN from 'bn.js'
 import { ProposalId } from '@alexandria/types/proposals'
 import { Fixture } from './interfaces/fixture'
-import { Bytes } from '@polkadot/types'
 import { assert } from 'chai'
 import { ApplicationId, OpeningId } from '@alexandria/types/hiring'
 import { WorkerId } from '@alexandria/types/working-group'
-import {Utils} from "../../utils/utils";
+import { Utils } from '../../utils/utils'
 
 export class CreateWorkingGroupLeaderOpeningFixture implements Fixture {
   private apiWrapper: ApiWrapper
