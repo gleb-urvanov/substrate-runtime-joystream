@@ -40,6 +40,7 @@ export class Sender {
   ): Promise<void> {
     return new Promise(async (resolve, reject) => {
       const nonce: BN = await this.getNonce(account.address)
+      console.log('sending tx from ' + account.address + ' with nonce ' + nonce)
       const signedTx = tx.sign(account, { nonce })
       await signedTx
         .send(async (result) => {
