@@ -379,11 +379,12 @@ export class FillOpeningFixture implements Fixture {
     ).flat()
     // Assert max number of workers is not exceeded
     const activeWorkersCount: BN = await this.apiWrapper.getActiveWorkersCount(this.module)
-    const maxWorkersCount: BN= this.apiWrapper.getMaxWorkersCount(this.module)
-    console.log('current workers count ' + activeWorkersCount + ' max workers count ' + maxWorkersCount)
+    const maxWorkersCount: BN = this.apiWrapper.getMaxWorkersCount(this.module)
     assert(
       activeWorkersCount.addn(applicationIds.length).lte(maxWorkersCount),
-      `The number of workers ${activeWorkersCount.addn(applicationIds.length)} will exceed max workers count ${maxWorkersCount}`
+      `The number of workers ${activeWorkersCount.addn(
+        applicationIds.length
+      )} will exceed max workers count ${maxWorkersCount}`
     )
 
     // Fill worker opening
