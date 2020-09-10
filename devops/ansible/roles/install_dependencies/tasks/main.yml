@@ -43,4 +43,4 @@
 
 - name: Install docker compose
   pip:
-    name: docker-compose==1.27.0
+    name: docker-compose==1.26.2
