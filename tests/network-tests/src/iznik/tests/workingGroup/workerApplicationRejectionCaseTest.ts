@@ -19,7 +19,7 @@ import { OpeningId } from '@alexandria/types/hiring'
 import { DbService } from '../../services/dbService'
 import { LeaderHiringHappyCaseFixture } from '../fixtures/leaderHiringHappyCase'
 
-tap.mocha.describe('Worker application happy case scenario', async () => {
+tap.mocha.describe('Worker application rejection case scenario', async () => {
   initConfig()
 
   const nodeUrl: string = process.env.NODE_URL!

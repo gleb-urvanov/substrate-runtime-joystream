@@ -12,7 +12,7 @@ import { PaidTermId } from '@alexandria/types/members'
 import { DbService } from '../../services/dbService'
 import { LeaderHiringHappyCaseFixture } from '../fixtures/leaderHiringHappyCase'
 
-tap.mocha.describe('Worker application happy case scenario', async () => {
+tap.mocha.describe('Zero at least value bug scenario', async () => {
   initConfig()
 
   const nodeUrl: string = process.env.NODE_URL!

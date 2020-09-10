@@ -25,7 +25,7 @@ import { CouncilElectionHappyCaseFixture } from '../fixtures/councilElectionHapp
 import { LeaderHiringHappyCaseFixture } from '../fixtures/leaderHiringHappyCase'
 import { BuyMembershipHappyCaseFixture } from '../fixtures/membershipModule'
 
-tap.mocha.describe('Worker application happy case scenario', async () => {
+tap.mocha.describe('Worker payout scenario', async () => {
   initConfig()
 
   const nodeUrl: string = process.env.NODE_URL!
