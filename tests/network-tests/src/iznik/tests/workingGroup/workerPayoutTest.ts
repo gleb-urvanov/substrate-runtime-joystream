@@ -38,7 +38,7 @@ tap.mocha.describe('Worker payout scenario', async () => {
   const sudo: KeyringPair = keyring.addFromUri(sudoUri)
 
   const N: number = +process.env.WORKING_GROUP_N!
-  let m1KeyPairs: KeyringPair[] = Utils.createKeyPairs(keyring, N)
+  const m1KeyPairs: KeyringPair[] = Utils.createKeyPairs(keyring, N)
   let m2KeyPairs: KeyringPair[] = Utils.createKeyPairs(keyring, N)
   const m3KeyPairs: KeyringPair[] = Utils.createKeyPairs(keyring, N)
   const leadKeyPair: KeyringPair[] = Utils.createKeyPairs(keyring, 1)
@@ -62,7 +62,13 @@ tap.mocha.describe('Worker payout scenario', async () => {
   setTestTimeout(apiWrapper, durationInBlocks)
 
   if (db.hasCouncil()) {
-    m1KeyPairs = db.getMembers()
+    const memberSetFixture: BuyMembershipHappyCaseFixture = new BuyMembershipHappyCaseFixture(
+      apiWrapper,
+      sudo,
+      m1KeyPairs,
+      paidTerms
+    )
+    tap.test('Recreating set of members', async () => await memberSetFixture.runner(false))
     m2KeyPairs = db.getCouncil()
   } else {
     const councilElectionHappyCaseFixture = new CouncilElectionHappyCaseFixture(
